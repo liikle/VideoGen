@@ -1,0 +1,17 @@
+# Install PyTorch for your GPU first (see README), then: pip install -r requirements.txt
+diffusers>=0.41.0
+transformers>=5.19,<6
+accelerate>=1.10
+huggingface_hub>=1.32,<2
+safetensors>=0.8
+sentencepiece
+ftfy
+bitsandbytes>=0.48; sys_platform != "darwin"
+spandrel>=0.4
+imageio-ffmpeg>=0.5
+numpy
+pillow
+psutil
+fastapi>=0.115
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9

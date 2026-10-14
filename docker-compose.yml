@@ -1,0 +1,21 @@
+services:
+  videogen:
+    build: .
+    ports:
+      - "127.0.0.1:7860:7860"
+    volumes:
+      # Model weights (tens of GB) and your videos persist here.
+      - ./data:/data
+    environment:
+      # Needed for LTX-2.5 after accepting its license on huggingface.co
+      - HF_TOKEN=${HF_TOKEN:-}
+      # Set a password if you expose the port beyond localhost.
+      - VIDEOGEN_PASSWORD=${VIDEOGEN_PASSWORD:-}
+    shm_size: "16gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

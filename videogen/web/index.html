@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VideoGen</title>
+  <meta name="description" content="Free, local, unlimited AI video generation">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%237c5cff'/%3E%3Cpath d='M12 9l12 7-12 7z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="8"/><path d="M12 9l12 7-12 7z"/></svg>
+      </span>
+      <div>
+        <h1>VideoGen</h1>
+        <p class="sub">Free · Local · Unlimited</p>
+      </div>
+    </div>
+    <div class="hw" id="hw" title="Detected hardware">Detecting hardware…</div>
+  </header>
+
+  <main class="layout">
+    <section class="panel create" aria-labelledby="create-title">
+      <h2 id="create-title" class="sr-only">Create a video</h2>
+
+      <div class="segmented mode" role="tablist" aria-label="Mode">
+        <button type="button" role="tab" id="mode-t2v" aria-selected="true" data-mode="t2v">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h13"/></svg>
+          Text → Video
+        </button>
+        <button type="button" role="tab" id="mode-i2v" aria-selected="false" data-mode="i2v">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>
+          Image → Video
+        </button>
+      </div>
+
+      <form id="form" novalidate>
+        <div class="field" id="image-field" hidden>
+          <label for="image-input">Reference image <span class="hint">becomes the first frame</span></label>
+          <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose or drop an image">
+            <input type="file" id="image-input" accept="image/png,image/jpeg,image/webp" hidden>
+            <div class="dz-empty" id="dz-empty">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+              <strong>Drop an image</strong> or click to browse
+              <span class="hint">PNG, JPEG or WebP · you can also paste</span>
+            </div>
+            <img id="dz-preview" alt="Reference image preview" hidden>
+            <button type="button" class="dz-clear" id="dz-clear" aria-label="Remove image" hidden>✕</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label-row">
+            <label for="prompt">Prompt</label>
+            <span class="hint" id="prompt-count">0 / 4000</span>
+          </div>
+          <textarea id="prompt" name="prompt" rows="5" maxlength="4000" required
+            placeholder="A golden retriever runs through a sunlit meadow toward the camera, slow motion, shallow depth of field, cinematic 35mm look, birds chirping"></textarea>
+          <details class="tips">
+            <summary>Tips for realistic results</summary>
+            <ul>
+              <li>Describe <b>subject</b>, <b>action</b>, <b>setting</b>, <b>camera</b> (e.g. “slow dolly-in, handheld, drone shot”) and <b>light</b> (“golden hour, overcast, neon”).</li>
+              <li>Add film language for realism: “shot on 35mm, shallow depth of field, natural skin texture”.</li>
+              <li>For image → video, describe the <i>motion</i> you want; the image already defines the look.</li>
+              <li>LTX also generates sound: mention it (“waves crashing, distant gulls”, “she says: ‘hello’”).</li>
+            </ul>
+          </details>
+        </div>
+
+        <fieldset class="field">
+          <legend>Model</legend>
+          <div class="engines" id="engines" role="radiogroup" aria-label="Model"></div>
+        </fieldset>
+
+        <div class="grid2">
+          <div class="field">
+            <span class="label" id="res-label">Resolution</span>
+            <div class="segmented small" role="radiogroup" aria-labelledby="res-label" id="resolution">
+              <button type="button" role="radio" aria-checked="false" data-value="720p">720p</button>
+              <button type="button" role="radio" aria-checked="true" data-value="1080p">1080p</button>
+            </div>
+          </div>
+          <div class="field">
+            <span class="label" id="aspect-label">Aspect ratio</span>
+            <div class="segmented small" role="radiogroup" aria-labelledby="aspect-label" id="aspect">
+              <button type="button" role="radio" aria-checked="true" data-value="16:9">16:9</button>
+              <button type="button" role="radio" aria-checked="false" data-value="9:16">9:16</button>
+              <button type="button" role="radio" aria-checked="false" data-value="1:1">1:1</button>
+              <button type="button" role="radio" aria-checked="false" data-value="auto" id="aspect-auto" hidden>Auto</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label-row">
+            <label for="duration">Duration</label>
+            <output id="duration-out" for="duration">5 s</output>
+          </div>
+          <input type="range" id="duration" min="1" max="15" step="1" value="5">
+          <div class="range-scale"><span>1 s</span><span id="duration-max-label">15 s</span></div>
+        </div>
+
+        <div class="toggles">
+          <label class="switch" id="audio-toggle">
+            <input type="checkbox" id="audio" checked>
+            <span class="track" aria-hidden="true"></span>
+            <span>Generate sound</span>
+          </label>
+          <label class="switch" id="enhance-toggle">
+            <input type="checkbox" id="enhance" checked>
+            <span class="track" aria-hidden="true"></span>
+            <span>Enhance prompt</span>
+          </label>
+        </div>
+
+        <details class="advanced">
+          <summary>Advanced</summary>
+          <div class="field" id="negative-field">
+            <label for="negative">Negative prompt <span class="hint">things to avoid</span></label>
+            <input type="text" id="negative" placeholder="blurry, watermark, text, distorted hands">
+          </div>
+          <div class="grid2">
+            <div class="field">
+              <label for="seed">Seed</label>
+              <div class="inline">
+                <input type="number" id="seed" placeholder="Random" min="0" step="1" inputmode="numeric">
+                <button type="button" class="icon-btn" id="seed-dice" title="Random seed" aria-label="Random seed">🎲</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="upscaler">Upscaling</label>
+              <select id="upscaler">
+                <option value="lanczos">Natural (Lanczos)</option>
+                <option value="realesrgan">AI detail (Real-ESRGAN)</option>
+                <option value="none">Off (native size)</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid2" id="tuning">
+            <div class="field">
+              <label for="steps">Steps</label>
+              <input type="number" id="steps" min="1" max="100" step="1" inputmode="numeric">
+            </div>
+            <div class="field">
+              <label for="guidance">Guidance</label>
+              <input type="number" id="guidance" min="0" max="20" step="0.1" inputmode="decimal">
+            </div>
+          </div>
+          <div class="field">
+            <label for="smooth">Smooth motion <span class="hint">frame interpolation, CPU-heavy</span></label>
+            <select id="smooth">
+              <option value="0">Off</option>
+              <option value="30">30 fps</option>
+              <option value="48">48 fps</option>
+              <option value="60">60 fps</option>
+            </select>
+          </div>
+        </details>
+
+        <div class="error" id="form-error" role="alert" hidden></div>
+
+        <button type="submit" class="primary" id="generate">
+          <span>Generate video</span>
+          <kbd>Ctrl ↵</kbd>
+        </button>
+        <p class="estimate hint" id="estimate"></p>
+      </form>
+    </section>
+
+    <section class="panel output" aria-labelledby="output-title">
+      <div class="viewer" id="viewer">
+        <div class="viewer-empty" id="viewer-empty">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="M17 10l5-3v10l-5-3"/></svg>
+          <p>Your videos will appear here.</p>
+          <p class="hint">Everything runs on your own GPU. No accounts, no credits, no limits.</p>
+        </div>
+        <video id="player" controls playsinline loop hidden></video>
+        <div class="viewer-progress" id="viewer-progress" hidden>
+          <div class="spinner" aria-hidden="true"></div>
+          <p id="viewer-message">Working…</p>
+          <div class="bar"><div id="viewer-bar"></div></div>
+          <p class="hint" id="viewer-sub"></p>
+          <button type="button" class="ghost" id="viewer-cancel">Cancel</button>
+        </div>
+      </div>
+      <div class="details" id="details" hidden>
+        <p class="prompt-text" id="detail-prompt"></p>
+        <div class="chips" id="detail-chips"></div>
+        <details id="detail-enhanced" hidden>
+          <summary>Enhanced prompt used</summary>
+          <p id="detail-enhanced-text"></p>
+        </details>
+        <p class="error" id="detail-error" hidden></p>
+        <div class="actions">
+          <a class="button" id="btn-download" download>Download MP4</a>
+          <button type="button" class="ghost" id="btn-reuse">Reuse settings</button>
+          <button type="button" class="ghost" id="btn-extend" title="Use the last frame as the start of a new image-to-video clip">Continue from last frame</button>
+          <button type="button" class="ghost danger" id="btn-delete">Delete</button>
+        </div>
+      </div>
+
+      <div class="history-head">
+        <h2 id="output-title">Library</h2>
+        <span class="hint" id="history-count"></span>
+      </div>
+      <div class="history" id="history" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <template id="engine-template">
+    <label class="engine">
+      <input type="radio" name="engine">
+      <span class="engine-body">
+        <span class="engine-title"></span>
+        <span class="engine-tagline"></span>
+        <span class="engine-badges"></span>
+        <span class="engine-warn"></span>
+      </span>
+    </label>
+  </template>
+
+  <template id="card-template">
+    <button type="button" class="card">
+      <span class="thumb"><img alt="" loading="lazy"><span class="status"></span><span class="mini-bar"><span></span></span></span>
+      <span class="card-text"></span>
+    </button>
+  </template>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
